@@ -3,6 +3,7 @@
 #include <time.h>
 #include <vector>
 #include <string>
+#include <algorithm>
 using namespace std;
 
 #include "SDL.h"
@@ -15,8 +16,11 @@ using namespace std;
 #define BMASK 0x00ff0000
 #define AMASK 0xff000000
 
-#define NPOP 2
-#define N_GENES 40
+#define BACKGROUND 0x00000000
+
+#define PARENTS 32
+#define NPOP 256
+#define N_GENES 64
 
 #define MUTATION_ADD 200
 #define MUTATION_MOVE 200
@@ -66,7 +70,7 @@ struct Gene{
   Gene(){
     x = rand() % target->w;
     y = rand() % target->h;
-    r = 10;
+    r = RANDINT(10,50);
     c[0] = rand() % 256;
     c[1] = rand() % 256;
     c[2] = rand() % 256;
@@ -123,8 +127,19 @@ struct Genome{
     dirty = true;
   }
 
+  void offspringFrom(const Genome &a, const Genome &b){
+    for(int i = 0; i < N_GENES; i++) {
+      if(rand() % 2) {
+        genes[i] = a.genes[i];
+      } else {
+        genes[i] = b.genes[i];
+      }
+    }
+    dirty = true;
+  }
+
   void draw(SDL_Surface *s){
-    SDL_FillRect(s, NULL, 0x00aaaaaa);
+    SDL_FillRect(s, NULL, BACKGROUND);
     for(int i = 0; i < N_GENES; i++){
       genes[i].draw(s);
     }
@@ -145,46 +160,52 @@ struct Genome{
     }
   }
 
-  long long int score() {
+  long long int score() const {
+    return _score;
+  }
+
+  void recalculate() {
     if(dirty) {
       draw(test);
       _score = diff(test, target);
       dirty = false;
     }
-    return _score;
   }
 
   int size(){
     return N_GENES;
   }
+
+  bool operator< (const Genome &other) const {
+    return score() < other.score();
+  }
 };
+
 
 struct Run{
   Genome genomes[NPOP];
 
   void run(){
     for(int iter = 0;; iter++){
-      long long int best = genomes[0].score();
-      int bestidx = 0;
-      for(int i = 1; i < NPOP; i++){
-        long long int f = genomes[i].score();
-        if(f < best){
-          best = f;
-          bestidx = i;
-        }
-      }
-      genomes[0] = genomes[bestidx];
+      for(int i = 0; i < NPOP; i++)
+        genomes[i].recalculate();
 
-      if((iter % 100) == 0) {
+      std::sort(std::begin(genomes), std::end(genomes));
+
+      if(1 || (iter % 100) == 0) {
         genomes[0].draw(screen);
         SDL_UpdateRect(screen, 0, 0, 0, 0);
-        printf("Iteration %i\tFitness: %lli\tCircles: %i\n", iter, best, genomes[bestidx].size());
+        printf("Iteration %i\tParents:", iter);
+        for(int i = 0; i < PARENTS; i++) {
+          printf(" %lli", genomes[i].score());
+        }
+        printf("\n");
       }
 
-      for(int i = 1; i < NPOP; i++){
-        genomes[i] = genomes[bestidx];
-        genomes[i].draw(test);
-        assert(genomes[i].size() == genomes[bestidx].size());
+      for(int i = PARENTS; i < NPOP; i++){
+        int parenta = rand() % PARENTS;
+        int parentb = rand() % PARENTS;
+        genomes[i].offspringFrom(genomes[parenta], genomes[parentb]);
         genomes[i].mutate();
       }
       SDL_Event e;
@@ -199,7 +220,7 @@ struct Run{
 
 int main(int argc, char *argv[]){
   SDL_Init(SDL_INIT_VIDEO);
-  target = IMG_Load("mona.bmp");
+  target = IMG_Load("smoking.bmp");
   screen = SDL_SetVideoMode(target->w, target->h, DEPTH, SDL_SWSURFACE);
 
   test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, DEPTH, RMASK, GMASK, BMASK, AMASK);
