@@ -76,8 +76,10 @@ struct Gene{
     filledCircleRGBA(s, x, y, r, c[0], c[1], c[2], c[3]);
   }
 
-  void mutate(){
+  bool mutate(){
+    bool dirty = false;
     TRAND(MOVE){
+      dirty = true;
       switch(rand() % 3){
         case 0:
           x = rand() % target->w;
@@ -94,21 +96,31 @@ struct Gene{
       }
     }
     TRAND(SIZE){
+      dirty = true;
       r += RANDINT(-3, 3);
     }
     for(int i = 0; i < 3; i++){
       TRAND(COLOUR){
+        dirty = true;
         c[i] = rand() % 256;
       }
       TRAND(COLOUR){
+        dirty = true;
         c[i] += RANDINT(-20, 20);
       }
     }
+    return dirty;
   }
 };
 
 struct Genome{
   Gene genes[N_GENES];
+  long long int _score;
+  bool dirty;
+
+  Genome(){
+    dirty = true;
+  }
 
   void draw(SDL_Surface *s){
     SDL_FillRect(s, NULL, 0x00aaaaaa);
@@ -119,8 +131,19 @@ struct Genome{
 
   void mutate(){
     for(int i = 0; i < N_GENES; i++){
-      genes[i].mutate();
+      if(genes[i].mutate()) {
+        dirty = true;
+      }
     }
+  }
+
+  long long int score() {
+    if(dirty) {
+      draw(test);
+      _score = diff(test, target);
+      dirty = false;
+    }
+    return _score;
   }
 
   int size(){
@@ -133,12 +156,10 @@ struct Run{
 
   void run(){
     for(int iter = 0;; iter++){
-      genomes[0].draw(test);
-      long long int best = diff(test, target);
+      long long int best = genomes[0].score();
       int bestidx = 0;
       for(int i = 1; i < NPOP; i++){
-        genomes[i].draw(test);
-        long long int f = diff(test, target);
+        long long int f = genomes[i].score();
         if(f < best){
           best = f;
           bestidx = i;
