@@ -54,12 +54,12 @@ long long int diff(SDL_Surface *a, SDL_Surface *b){
 }
 
 struct Gene{
-  int x, y, w;
+  int x, y, r;
   Uint8 c[4];
   Gene(){
     x = rand() % target->w;
     y = rand() % target->h;
-    w = 10;
+    r = 10;
     c[0] = rand() % 256;
     c[1] = rand() % 256;
     c[2] = rand() % 256;
@@ -67,7 +67,7 @@ struct Gene{
   }
 
   void draw(SDL_Surface *s){
-    filledCircleRGBA(s, x, y, w, c[0], c[1], c[2], c[3]);
+    filledCircleRGBA(s, x, y, r, c[0], c[1], c[2], c[3]);
   }
 
   void mutate(){
@@ -88,7 +88,7 @@ struct Gene{
       }
     }
     TRAND(SIZE){
-      w += RANDINT(-3, 3);
+      r += RANDINT(-3, 3);
     }
     for(int i = 0; i < 3; i++){
       TRAND(COLOUR){
