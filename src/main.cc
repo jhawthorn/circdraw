@@ -9,6 +9,12 @@ using namespace std;
 #include "SDL_image.h"
 #include "SDL_gfxPrimitives.h"
 
+#define DEPTH 32
+#define RMASK 0x000000ff
+#define GMASK 0x0000ff00
+#define BMASK 0x00ff0000
+#define AMASK 0xff000000
+
 #define NPOP 2
 #define N_GENES 40
 
@@ -165,9 +171,9 @@ struct Run{
 int main(int argc, char *argv[]){
   SDL_Init(SDL_INIT_VIDEO);
   target = IMG_Load("mona.bmp");
-  screen = SDL_SetVideoMode(target->w, target->h, 32, SDL_SWSURFACE);
+  screen = SDL_SetVideoMode(target->w, target->h, DEPTH, SDL_SWSURFACE);
 
-  test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+  test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, DEPTH, RMASK, GMASK, BMASK, AMASK);
 
   target = SDL_ConvertSurface(target, test->format, SDL_SWSURFACE);
 
