@@ -3,7 +3,7 @@ SRCFILES := $(wildcard src/*.cc)
 OBJFILES := $(SRCFILES:%.cc=%.o)
 DEPFILES := $(OBJFILES:%.o=%.d)
 CLEANFILES := $(CLEANFILES) $(DEPFILES) $(OBJFILES) circdraw
-CXXFLAGS ?= -O3 $(shell sdl-config --cflags)
+CXXFLAGS ?= -O3 -g $(shell sdl-config --cflags) -Wall
 LIBS ?= $(shell sdl-config --libs) -lSDL_image -lSDL_gfx
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin

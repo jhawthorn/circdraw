@@ -10,8 +10,9 @@ using namespace std;
 #include "SDL_gfxPrimitives.h"
 
 #define NPOP 2
+#define N_GENES 40
 
-#define MUTATION_ADD 100
+#define MUTATION_ADD 200
 #define MUTATION_MOVE 200
 #define MUTATION_DEL 200
 #define MUTATION_COLOUR 200
@@ -26,6 +27,10 @@ SDL_Surface *test;
 
 long long int diff(SDL_Surface *a, SDL_Surface *b){
   Uint8 *da, *db;
+
+  SDL_LockSurface(a);
+  SDL_LockSurface(b);
+
   da = (Uint8 *)a->pixels;
   db = (Uint8 *)b->pixels;
   long long int delta = 0;
@@ -41,6 +46,10 @@ long long int diff(SDL_Surface *a, SDL_Surface *b){
     da++;
     db++;
   }
+
+  SDL_UnlockSurface(b);
+  SDL_UnlockSurface(a);
+
   return delta;
 }
 
@@ -91,73 +100,76 @@ struct Gene{
 };
 
 struct Genome{
-  vector<Gene> genes;
+  Gene genes[N_GENES];
+
   void draw(SDL_Surface *s){
     SDL_FillRect(s, NULL, 0x00aaaaaa);
-    for(int i = 0; i < genes.size(); i++){
+    for(int i = 0; i < N_GENES; i++){
       genes[i].draw(s);
     }
   }
+
   void mutate(){
-    TRAND(ADD){
-      genes.push_back(Gene());
-    }
-    if(!genes.empty()){
-      TRAND(DEL){
-        genes.push_back(Gene());
-      }
-    }
-    for(int i = 0; i < genes.size(); i++){
+    for(int i = 0; i < N_GENES; i++){
       genes[i].mutate();
     }
   }
+
   int size(){
-    return genes.size();
+    return N_GENES;
   }
 };
 
-Genome genomes[NPOP];
+struct Run{
+  Genome genomes[NPOP];
 
-void run(){
-  for(int iter = 0;; iter++){
-    genomes[0].draw(test);
-    long long int best = diff(test, target);
-    int bestidx = 0;
-    for(int i = 1; i < NPOP; i++){
-      genomes[i].draw(test);
-      long long int f = diff(test, target);
-      if(f < best){
-        best = f;
-        bestidx = i;
+  void run(){
+    for(int iter = 0;; iter++){
+      genomes[0].draw(test);
+      long long int best = diff(test, target);
+      int bestidx = 0;
+      for(int i = 1; i < NPOP; i++){
+        genomes[i].draw(test);
+        long long int f = diff(test, target);
+        if(f < best){
+          best = f;
+          bestidx = i;
+        }
       }
-    }
-    genomes[0] = genomes[bestidx];
-    genomes[0].draw(screen);
-    SDL_Flip(screen);
-    printf("Iteration %i\tFitness: %lli\tCircles: %i\n", iter, best, genomes[bestidx].size());
-    for(int i = 1; i < NPOP; i++){
-      genomes[i] = genomes[bestidx];
-      genomes[i].draw(test);
-      assert(genomes[i].size() == genomes[bestidx].size());
-      genomes[i].mutate();
-    }
-    SDL_Event e;
-    while(SDL_PollEvent(&e)){
-      if(e.type == SDL_QUIT || (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)){
-        return;
+      genomes[0] = genomes[bestidx];
+
+      if((iter % 100) == 0) {
+        genomes[0].draw(screen);
+        SDL_UpdateRect(screen, 0, 0, 0, 0);
+        printf("Iteration %i\tFitness: %lli\tCircles: %i\n", iter, best, genomes[bestidx].size());
+      }
+
+      for(int i = 1; i < NPOP; i++){
+        genomes[i] = genomes[bestidx];
+        genomes[i].draw(test);
+        assert(genomes[i].size() == genomes[bestidx].size());
+        genomes[i].mutate();
+      }
+      SDL_Event e;
+      while(SDL_PollEvent(&e)){
+        if(e.type == SDL_QUIT || (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)){
+          return;
+        }
       }
     }
   }
-}
+};
 
 int main(int argc, char *argv[]){
-  srand(time(NULL));
   SDL_Init(SDL_INIT_VIDEO);
   target = IMG_Load("mona.bmp");
   screen = SDL_SetVideoMode(target->w, target->h, 32, SDL_SWSURFACE);
-  target = SDL_DisplayFormat(target);
-  test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, target->format->BitsPerPixel, target->format->Rmask, target->format->Gmask, target->format->Bmask, target->format->Amask);
-  run();
+
+  test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+
+  target = SDL_ConvertSurface(target, test->format, SDL_SWSURFACE);
+
+  (new Run())->run();
   return 0;
 }
 
