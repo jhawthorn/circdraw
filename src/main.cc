@@ -28,9 +28,9 @@ long long int diff(SDL_Surface *a, SDL_Surface *b){
   Uint8 *da, *db;
   da = (Uint8 *)a->pixels;
   db = (Uint8 *)b->pixels;
-  long long int delta;
+  long long int delta = 0;
   for (int i = 0; i < a->w * a->h; i++){
-    long long int tmp2;
+    long long int tmp2 = 0;
     int tmp = (*da++) - (*db++);
     tmp2 += tmp * tmp;
     tmp = (*da++) - (*db++);
