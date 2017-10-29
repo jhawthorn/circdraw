@@ -23,8 +23,9 @@ using namespace std;
 #define MUTATION_DEL 200
 #define MUTATION_COLOUR 200
 #define MUTATION_SIZE 400
+#define MUTATION_SWAP 400
 
-#define TRAND(x) if(!(rand() % (MUTATION_##x / 2)))
+#define TRAND(x) if(!(rand() % (MUTATION_##x)))
 #define RANDINT(a, b) ((rand() % (b-a + 1)) + a)
 
 SDL_Surface *target;
@@ -133,6 +134,13 @@ struct Genome{
     for(int i = 0; i < N_GENES; i++){
       if(genes[i].mutate()) {
         dirty = true;
+      }
+      TRAND(SWAP){
+        dirty = true;
+        int j = RANDINT(0,N_GENES);
+        Gene tmp = genes[j];
+        genes[j] = genes[i];
+        genes[i] = tmp;
       }
     }
   }
