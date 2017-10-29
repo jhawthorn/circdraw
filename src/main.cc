@@ -63,11 +63,13 @@ struct Gene{
     c[0] = rand() % 256;
     c[1] = rand() % 256;
     c[2] = rand() % 256;
-    c[3] = rand() % 256;
+    c[3] = 255;
   }
+
   void draw(SDL_Surface *s){
     filledCircleRGBA(s, x, y, w, c[0], c[1], c[2], c[3]);
   }
+
   void mutate(){
     TRAND(MOVE){
       switch(rand() % 3){
@@ -88,7 +90,7 @@ struct Gene{
     TRAND(SIZE){
       w += RANDINT(-3, 3);
     }
-    for(int i = 0; i < 4; i++){
+    for(int i = 0; i < 3; i++){
       TRAND(COLOUR){
         c[i] = rand() % 256;
       }
