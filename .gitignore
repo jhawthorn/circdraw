@@ -1,0 +1,10 @@
+*.o
+circdraw
+
+vgcore.*
+
+*.bmp
+*.svg
+*.jpeg
+*.jpg
+*.png
