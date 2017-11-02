@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <iostream>
+#include <fstream>
 using namespace std;
 
 #include "SDL.h"
@@ -118,6 +120,13 @@ struct Gene{
     }
     return dirty;
   }
+
+  void writeSVG(std::ostream &o) {
+    o << "<circle ";
+    o << "cx=\"" << x << "\" cy=\"" << y << "\" r=\"" << r << "\" ";
+    o << "fill=\"#" << std::hex << (int)c[0] << (int)c[1] << (int)c[2] << (int)c[3] << std::dec << "\" ";
+    o << " />" << std::endl;
+  }
 };
 
 struct Genome{
@@ -185,6 +194,15 @@ struct Genome{
   bool operator== (const Genome &other) const {
     return score() == other.score();
   }
+
+  void writeSVG(std::ostream &o) {
+    o << "<svg xmlns=\"http://www.w3.org/2000/svg\" " << std::endl;
+    o << "width=\"" << target->w << "\" height=\"" << target->h << "\">" << std::endl;
+    for(int i = 0; i < N_GENES; i++) {
+      genes[i].writeSVG(o);
+    }
+    o << "</svg>" << std::endl;
+  }
 };
 
 
@@ -207,6 +225,11 @@ struct Run{
           printf(" %lli", genomes[i].score());
         }
         printf("\n");
+
+        std::ofstream file;
+        file.open("output.svg");
+        genomes[0].writeSVG(file);
+        file.close();
       }
 
       for(int i = PARENTS; i < NPOP; i++){
