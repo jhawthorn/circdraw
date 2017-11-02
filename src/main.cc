@@ -22,6 +22,8 @@ using namespace std;
 #define NPOP 256
 #define N_GENES 64
 
+#define ALLOW_ALPHA 1
+
 #define MUTATION_ADD 200
 #define MUTATION_MOVE 200
 #define MUTATION_DEL 200
@@ -74,7 +76,7 @@ struct Gene{
     c[0] = rand() % 256;
     c[1] = rand() % 256;
     c[2] = rand() % 256;
-    c[3] = 255;
+    c[3] = ALLOW_ALPHA ? (rand() % 256) : 255;
   }
 
   void draw(SDL_Surface *s){
@@ -104,7 +106,7 @@ struct Gene{
       dirty = true;
       r += RANDINT(-3, 3);
     }
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < (ALLOW_ALPHA ? 4 : 3); i++){
       TRAND(COLOUR){
         dirty = true;
         c[i] = rand() % 256;
