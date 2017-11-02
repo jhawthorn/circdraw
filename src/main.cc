@@ -53,7 +53,7 @@ long long int diff(SDL_Surface *a, SDL_Surface *b){
     tmp2 += tmp * tmp;
     tmp = (*da++) - (*db++);
     tmp2 += tmp * tmp;
-    delta += sqrt(tmp2);
+    delta += tmp2;
     da++;
     db++;
   }
