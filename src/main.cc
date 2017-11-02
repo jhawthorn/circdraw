@@ -179,6 +179,10 @@ struct Genome{
   bool operator< (const Genome &other) const {
     return score() < other.score();
   }
+
+  bool operator== (const Genome &other) const {
+    return score() == other.score();
+  }
 };
 
 
@@ -191,6 +195,7 @@ struct Run{
         genomes[i].recalculate();
 
       std::sort(std::begin(genomes), std::end(genomes));
+      std::unique(std::begin(genomes), std::end(genomes));
 
       if(1 || (iter % 100) == 0) {
         genomes[0].draw(screen);
