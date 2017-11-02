@@ -16,13 +16,13 @@ using namespace std;
 #define BMASK 0x00ff0000
 #define AMASK 0xff000000
 
-#define BACKGROUND 0x00000000
+#define BACKGROUND 0xffffffff
 
-#define PARENTS 32
-#define NPOP 256
-#define N_GENES 64
+#define PARENTS 16
+#define NPOP 128
+#define N_GENES 128
 
-#define ALLOW_ALPHA 1
+#define ALLOW_ALPHA 0
 
 #define MUTATION_ADD 200
 #define MUTATION_MOVE 200
