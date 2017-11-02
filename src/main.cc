@@ -38,7 +38,6 @@ using namespace std;
 #define RANDINT(a, b) ((rand() % (b-a + 1)) + a)
 
 SDL_Surface *target;
-SDL_Surface *screen;
 SDL_Surface *test;
 
 long long int diff(SDL_Surface *a, SDL_Surface *b){
@@ -227,8 +226,6 @@ struct Run{
       std::unique(std::begin(genomes), std::end(genomes));
 
       if(1 || (iter % 100) == 0) {
-        genomes[0].draw(screen);
-        SDL_UpdateRect(screen, 0, 0, 0, 0);
         printf("Iteration %i\tParents:", iter);
         for(int i = 0; i < PARENTS; i++) {
           printf(" %lli", genomes[i].score());
@@ -266,9 +263,7 @@ int main(int argc, char *argv[]){
   if(argc != 2) {
     usage(argc, argv);
   }
-  SDL_Init(SDL_INIT_VIDEO);
   target = IMG_Load(argv[1]);
-  screen = SDL_SetVideoMode(target->w, target->h, DEPTH, SDL_SWSURFACE);
 
   test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, DEPTH, RMASK, GMASK, BMASK, AMASK);
 
