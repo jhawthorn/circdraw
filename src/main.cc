@@ -218,9 +218,17 @@ struct Run{
   }
 };
 
+void usage(int argc, char *argv[]) {
+  printf("USAGE: %s IMAGE.bmp\n", argv[0]);
+  exit(1);
+}
+
 int main(int argc, char *argv[]){
+  if(argc != 2) {
+    usage(argc, argv);
+  }
   SDL_Init(SDL_INIT_VIDEO);
-  target = IMG_Load("smoking.bmp");
+  target = IMG_Load(argv[1]);
   screen = SDL_SetVideoMode(target->w, target->h, DEPTH, SDL_SWSURFACE);
 
   test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, DEPTH, RMASK, GMASK, BMASK, AMASK);
