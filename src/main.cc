@@ -32,6 +32,7 @@ using namespace std;
 #define MUTATION_COLOUR 200
 #define MUTATION_SIZE 400
 #define MUTATION_SWAP 400
+#define MUTATION_RANDOM 400
 
 #define TRAND(x) if(!(rand() % (MUTATION_##x)))
 #define RANDINT(a, b) ((rand() % (b-a + 1)) + a)
@@ -72,6 +73,14 @@ struct Gene{
   int x, y, r;
   Uint8 c[4];
   Gene(){
+    reRoll();
+  }
+
+  void draw(SDL_Surface *s){
+    filledCircleRGBA(s, x, y, r, c[0], c[1], c[2], c[3]);
+  }
+
+  void reRoll() {
     x = rand() % target->w;
     y = rand() % target->h;
     r = RANDINT(10,50);
@@ -81,12 +90,12 @@ struct Gene{
     c[3] = ALLOW_ALPHA ? (rand() % 256) : 255;
   }
 
-  void draw(SDL_Surface *s){
-    filledCircleRGBA(s, x, y, r, c[0], c[1], c[2], c[3]);
-  }
-
   bool mutate(){
     bool dirty = false;
+    TRAND(RANDOM){
+      dirty = true;
+      reRoll();
+    }
     TRAND(MOVE){
       dirty = true;
       switch(rand() % 3){
