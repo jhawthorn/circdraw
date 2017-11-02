@@ -129,7 +129,7 @@ struct Gene{
     return dirty;
   }
 
-  void writeSVG(std::ostream &o) {
+  void writeSVG(std::ostream &o) const {
     o << "<circle ";
     o << "cx=\"" << x << "\" cy=\"" << y << "\" r=\"" << r << "\" ";
     o << "fill=\"#" << std::hex << (int)c[0] << (int)c[1] << (int)c[2] << (int)c[3] << std::dec << "\" ";
@@ -203,7 +203,7 @@ struct Genome{
     return score() == other.score();
   }
 
-  void writeSVG(std::ostream &o) {
+  void writeSVG(std::ostream &o) const {
     o << "<svg xmlns=\"http://www.w3.org/2000/svg\" " << std::endl;
     o << "width=\"" << target->w << "\" height=\"" << target->h << "\">" << std::endl;
     for(int i = 0; i < N_GENES; i++) {
@@ -213,37 +213,77 @@ struct Genome{
   }
 };
 
+struct Population {
+  Genome genomes[NPOP];
+
+  const Genome& best() {
+    return genomes[0];
+  }
+
+  void prune() {
+    std::sort(std::begin(genomes), std::end(genomes));
+    std::unique(std::begin(genomes), std::end(genomes));
+  }
+
+  void recalculate() {
+    for(int i = 0; i < NPOP; i++)
+      genomes[i].recalculate();
+  }
+
+  void mutate() {
+    for(int i = PARENTS; i < NPOP; i++){
+      int parenta = rand() % PARENTS;
+      int parentb = rand() % PARENTS;
+      genomes[i].offspringFrom(genomes[parenta], genomes[parentb]);
+      genomes[i].mutate();
+    }
+  }
+
+  void step() {
+    recalculate();
+    prune();
+    mutate();
+  }
+};
+
 
 struct Run{
-  Genome genomes[NPOP];
+  char *input_filename;
+  std::string output_filename;
+  Population *population;
+
+  Run(char *filename) {
+    input_filename = filename;
+
+    output_filename.append(input_filename);
+    output_filename.append(".svg");
+
+    target = IMG_Load(input_filename);
+
+    test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, DEPTH, RMASK, GMASK, BMASK, AMASK);
+
+    target = SDL_ConvertSurface(target, test->format, SDL_SWSURFACE);
+
+    population = new Population();
+  }
 
   void run(){
     for(int iter = 0;; iter++){
-      for(int i = 0; i < NPOP; i++)
-        genomes[i].recalculate();
+      population->step();
 
-      std::sort(std::begin(genomes), std::end(genomes));
-      std::unique(std::begin(genomes), std::end(genomes));
-
-      if(1 || (iter % 100) == 0) {
+      if((iter % 10) == 0) {
         printf("Iteration %i\tParents:", iter);
         for(int i = 0; i < PARENTS; i++) {
-          printf(" %lli", genomes[i].score());
+          printf(" %lli", population->genomes[i].score());
         }
         printf("\n");
 
         std::ofstream file;
-        file.open("output.svg");
-        genomes[0].writeSVG(file);
+        file.open(output_filename);
+        population->best().writeSVG(file);
         file.close();
       }
 
-      for(int i = PARENTS; i < NPOP; i++){
-        int parenta = rand() % PARENTS;
-        int parentb = rand() % PARENTS;
-        genomes[i].offspringFrom(genomes[parenta], genomes[parentb]);
-        genomes[i].mutate();
-      }
       SDL_Event e;
       while(SDL_PollEvent(&e)){
         if(e.type == SDL_QUIT || (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)){
@@ -263,13 +303,7 @@ int main(int argc, char *argv[]){
   if(argc != 2) {
     usage(argc, argv);
   }
-  target = IMG_Load(argv[1]);
-
-  test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, DEPTH, RMASK, GMASK, BMASK, AMASK);
-
-  target = SDL_ConvertSurface(target, test->format, SDL_SWSURFACE);
-
-  (new Run())->run();
+  (new Run(argv[1]))->run();
   return 0;
 }
 
