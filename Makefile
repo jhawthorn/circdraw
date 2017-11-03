@@ -12,6 +12,8 @@ BINDIR = $(PREFIX)/bin
 # User configuration
 -include config.mk
 
+all: circdraw
+
 circdraw: $(OBJFILES)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJFILES) $(LIBS)
 
