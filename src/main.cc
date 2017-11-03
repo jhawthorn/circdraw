@@ -9,8 +9,6 @@
 using namespace std;
 
 #include "SDL.h"
-#include "SDL_image.h"
-#include "SDL_gfxPrimitives.h"
 
 #include <opencv2/opencv.hpp>
 using namespace cv;
@@ -40,36 +38,11 @@ using namespace cv;
 #define TRAND(x) if(!(rand() % (MUTATION_##x)))
 #define RANDINT(a, b) ((rand() % (b-a + 1)) + a)
 
-SDL_Surface *target;
-SDL_Surface *test;
+struct Dimensions {
+  int w, h;
+};
 
-long long int diff(SDL_Surface *a, SDL_Surface *b){
-  Uint8 *da, *db;
-
-  SDL_LockSurface(a);
-  SDL_LockSurface(b);
-
-  da = (Uint8 *)a->pixels;
-  db = (Uint8 *)b->pixels;
-  long long int delta = 0;
-  for (int i = 0; i < a->w * a->h; i++){
-    long long int tmp2 = 0;
-    int tmp = (*da++) - (*db++);
-    tmp2 += tmp * tmp;
-    tmp = (*da++) - (*db++);
-    tmp2 += tmp * tmp;
-    tmp = (*da++) - (*db++);
-    tmp2 += tmp * tmp;
-    delta += tmp2;
-    da++;
-    db++;
-  }
-
-  SDL_UnlockSurface(b);
-  SDL_UnlockSurface(a);
-
-  return delta;
-}
+Dimensions dim = {100, 100};
 
 long long int diff(const Mat &a, const Mat &b){
   Mat dst;
@@ -85,12 +58,9 @@ long long int diff(const Mat &a, const Mat &b){
 struct Gene{
   int x, y, r;
   Uint8 c[4];
-  Gene(){
-    reRoll();
-  }
 
-  void draw(SDL_Surface *s){
-    filledCircleRGBA(s, x, y, r, c[0], c[1], c[2], c[3]);
+  Gene() {
+    randomize();
   }
 
   void draw(Mat &image){
@@ -107,9 +77,9 @@ struct Gene{
         LINE_8 );
   }
 
-  void reRoll() {
-    x = rand() % target->w;
-    y = rand() % target->h;
+  void randomize() {
+    x = rand() % dim.w;
+    y = rand() % dim.h;
     r = RANDINT(10,50);
     c[0] = rand() % 256;
     c[1] = rand() % 256;
@@ -121,14 +91,14 @@ struct Gene{
     bool dirty = false;
     TRAND(RANDOM){
       dirty = true;
-      reRoll();
+      randomize();
     }
     TRAND(MOVE){
       dirty = true;
       switch(rand() % 3){
         case 0:
-          x = rand() % target->w;
-          y = rand() % target->h;
+          x = rand() % dim.w;
+          y = rand() % dim.h;
           break;
         case 1:
           x += RANDINT(-20, 20);
@@ -185,13 +155,6 @@ struct Genome{
     dirty = true;
   }
 
-  void draw(SDL_Surface *s){
-    SDL_FillRect(s, NULL, BACKGROUND);
-    for(int i = 0; i < N_GENES; i++){
-      genes[i].draw(s);
-    }
-  }
-
   void draw(Mat &image){
     for(int i = 0; i < N_GENES; i++){
       genes[i].draw(image);
@@ -221,11 +184,9 @@ struct Genome{
   void recalculate(const Mat &targetImage) {
     Mat testImage = Mat::zeros(targetImage.size(), CV_8UC3);
     if(dirty) {
-      draw(test);
       draw(testImage);
 
       _score = diff(testImage, targetImage);
-      //cout << _score << " |" << diff(testImage, targetImage) << endl;
       dirty = false;
     }
   }
@@ -244,7 +205,7 @@ struct Genome{
 
   void writeSVG(std::ostream &o) const {
     o << "<svg xmlns=\"http://www.w3.org/2000/svg\" " << std::endl;
-    o << "width=\"" << target->w << "\" height=\"" << target->h << "\">" << std::endl;
+    o << "width=\"" << dim.w << "\" height=\"" << dim.h << "\">" << std::endl;
     for(int i = 0; i < N_GENES; i++) {
       genes[i].writeSVG(o);
     }
@@ -300,11 +261,8 @@ struct Run{
     output_filename.append(".svg");
 
     targetImage = imread(input_filename, IMREAD_COLOR);
-    target = IMG_Load(input_filename);
 
-    test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, DEPTH, RMASK, GMASK, BMASK, AMASK);
-
-    target = SDL_ConvertSurface(target, test->format, SDL_SWSURFACE);
+    dim = {targetImage.size().width, targetImage.size().height};
 
     population = new Population();
   }
@@ -324,13 +282,6 @@ struct Run{
         file.open(output_filename);
         population->best().writeSVG(file);
         file.close();
-      }
-
-      SDL_Event e;
-      while(SDL_PollEvent(&e)){
-        if(e.type == SDL_QUIT || (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)){
-          return;
-        }
       }
     }
   }
