@@ -3,8 +3,10 @@ SRCFILES := $(wildcard src/*.cc)
 OBJFILES := $(SRCFILES:%.cc=%.o)
 DEPFILES := $(OBJFILES:%.o=%.d)
 CLEANFILES := $(CLEANFILES) $(DEPFILES) $(OBJFILES) circdraw
-CXXFLAGS ?= -O3 -g $(shell sdl-config --cflags) -Wall
-LIBS ?= $(shell sdl-config --libs) -lSDL_image -lSDL_gfx
+CXXFLAGS ?= -O3 -g $(shell sdl-config --cflags) $(shell pkg-config opencv --cflags) -Wall
+OPENCV_LIBS := $(shell pkg-config opencv --libs)
+SDL_LIBS := $(shell sdl-config --libs) -lSDL_image -lSDL_gfx
+LIBS ?= $(SDL_LIBS) $(OPENCV_LIBS)
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
 

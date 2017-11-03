@@ -12,6 +12,9 @@ using namespace std;
 #include "SDL_image.h"
 #include "SDL_gfxPrimitives.h"
 
+#include <opencv2/opencv.hpp>
+using namespace cv;
+
 #define DEPTH 32
 #define RMASK 0x000000ff
 #define GMASK 0x0000ff00
@@ -68,6 +71,17 @@ long long int diff(SDL_Surface *a, SDL_Surface *b){
   return delta;
 }
 
+long long int diff(const Mat &a, const Mat &b){
+  Mat dst;
+
+  absdiff(a, b, dst);
+  dst.convertTo(dst, CV_32F);
+  dst = dst.mul(dst);
+
+  Scalar s = sum(dst);
+  return s[0] + s[1] + s[2];
+}
+
 struct Gene{
   int x, y, r;
   Uint8 c[4];
@@ -77,6 +91,20 @@ struct Gene{
 
   void draw(SDL_Surface *s){
     filledCircleRGBA(s, x, y, r, c[0], c[1], c[2], c[3]);
+  }
+
+  void draw(Mat &image){
+    if(r < 0) {
+      return;
+    }
+    Point center = {x, y};
+    circle(
+        image,
+        center,
+        r,
+        Scalar(c[2], c[1], c[0]),
+        FILLED,
+        LINE_8 );
   }
 
   void reRoll() {
@@ -164,6 +192,13 @@ struct Genome{
     }
   }
 
+  void draw(Mat &image){
+    for(int i = 0; i < N_GENES; i++){
+      genes[i].draw(image);
+    }
+  }
+
+
   void mutate(){
     for(int i = 0; i < N_GENES; i++){
       if(genes[i].mutate()) {
@@ -183,10 +218,14 @@ struct Genome{
     return _score;
   }
 
-  void recalculate() {
+  void recalculate(const Mat &targetImage) {
+    Mat testImage = Mat::zeros(targetImage.size(), CV_8UC3);
     if(dirty) {
       draw(test);
-      _score = diff(test, target);
+      draw(testImage);
+
+      _score = diff(testImage, targetImage);
+      //cout << _score << " |" << diff(testImage, targetImage) << endl;
       dirty = false;
     }
   }
@@ -225,9 +264,9 @@ struct Population {
     std::unique(std::begin(genomes), std::end(genomes));
   }
 
-  void recalculate() {
+  void recalculate(const Mat &targetImage) {
     for(int i = 0; i < NPOP; i++)
-      genomes[i].recalculate();
+      genomes[i].recalculate(targetImage);
   }
 
   void mutate() {
@@ -239,8 +278,8 @@ struct Population {
     }
   }
 
-  void step() {
-    recalculate();
+  void step(const Mat &targetImage) {
+    recalculate(targetImage);
     prune();
     mutate();
   }
@@ -252,12 +291,15 @@ struct Run{
   std::string output_filename;
   Population *population;
 
+  Mat targetImage;
+
   Run(char *filename) {
     input_filename = filename;
 
     output_filename.append(input_filename);
     output_filename.append(".svg");
 
+    targetImage = imread(input_filename, IMREAD_COLOR);
     target = IMG_Load(input_filename);
 
     test = SDL_CreateRGBSurface(SDL_SWSURFACE, target->w, target->h, DEPTH, RMASK, GMASK, BMASK, AMASK);
@@ -269,7 +311,7 @@ struct Run{
 
   void run(){
     for(int iter = 0;; iter++){
-      population->step();
+      population->step(targetImage);
 
       if((iter % 10) == 0) {
         printf("Iteration %i\tParents:", iter);
