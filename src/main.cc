@@ -11,14 +11,6 @@ using namespace std;
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
-#define DEPTH 32
-#define RMASK 0x000000ff
-#define GMASK 0x0000ff00
-#define BMASK 0x00ff0000
-#define AMASK 0xff000000
-
-#define BACKGROUND 0xffffffff
-
 #define PARENTS 16
 #define NPOP 128
 #define N_GENES 128
