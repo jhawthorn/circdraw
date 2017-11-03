@@ -278,7 +278,7 @@ struct Run{
 };
 
 void usage(int argc, char *argv[]) {
-  printf("USAGE: %s IMAGE.bmp\n", argv[0]);
+  cout << "USAGE: " << argv[0] << " IMAGEFILE" << endl;
   exit(1);
 }
 
