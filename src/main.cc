@@ -34,7 +34,7 @@ struct Dimensions {
 
 Dimensions dim = {100, 100};
 
-long long int diff(const Mat &a, const Mat &b){
+double diff(const Mat &a, const Mat &b){
   Mat dst;
 
   absdiff(a, b, dst);
@@ -127,7 +127,7 @@ struct Gene{
 
 struct Genome{
   Gene genes[N_GENES];
-  long long int _score;
+  double _score;
   bool dirty;
 
   Genome(){
@@ -167,7 +167,7 @@ struct Genome{
     }
   }
 
-  long long int score() const {
+  double score() const {
     return _score;
   }
 
@@ -262,11 +262,11 @@ struct Run{
       population->step(targetImage);
 
       if((iter % 10) == 0) {
-        printf("Iteration %i\tParents:", iter);
+        cout << "Iteration " << iter << "\tParents: ";
         for(int i = 0; i < PARENTS; i++) {
-          printf(" %lli", population->genomes[i].score());
+          cout << " " << population->genomes[i].score();
         }
-        printf("\n");
+        cout << endl;
 
         std::ofstream file;
         file.open(output_filename);
