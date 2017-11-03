@@ -8,8 +8,6 @@
 #include <fstream>
 using namespace std;
 
-#include "SDL.h"
-
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
@@ -57,7 +55,7 @@ long long int diff(const Mat &a, const Mat &b){
 
 struct Gene{
   int x, y, r;
-  Uint8 c[4];
+  unsigned char c[4];
 
   Gene() {
     randomize();
