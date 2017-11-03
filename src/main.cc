@@ -34,16 +34,24 @@ struct Dimensions {
 
 Dimensions dim = {100, 100};
 
-double diff(const Mat &a, const Mat &b){
-  Mat dst;
+struct Comparator {
+  Mat original;
 
-  absdiff(a, b, dst);
-  dst.convertTo(dst, CV_32F);
-  dst = dst.mul(dst);
+  Comparator(Mat &o) {
+    original = o;
+  }
 
-  Scalar s = sum(dst);
-  return s[0] + s[1] + s[2];
-}
+  double diff(const Mat &other) const {
+    Mat dst;
+
+    absdiff(original, other, dst);
+    dst.convertTo(dst, CV_16UC3);
+    dst = dst.mul(dst);
+
+    Scalar s = sum(dst);
+    return s[0] + s[1] + s[2];
+  }
+};
 
 struct Gene{
   int x, y, r;
@@ -171,12 +179,12 @@ struct Genome{
     return _score;
   }
 
-  void recalculate(const Mat &targetImage) {
-    Mat testImage = Mat::zeros(targetImage.size(), CV_8UC3);
+  void recalculate(const Comparator &target) {
+    Mat testImage = Mat::zeros(target.original.size(), CV_8UC3);
     if(dirty) {
       draw(testImage);
 
-      _score = diff(testImage, targetImage);
+      _score = target.diff(testImage);
       dirty = false;
     }
   }
@@ -215,9 +223,9 @@ struct Population {
     std::unique(std::begin(genomes), std::end(genomes));
   }
 
-  void recalculate(const Mat &targetImage) {
+  void recalculate(const Comparator &target) {
     for(int i = 0; i < NPOP; i++)
-      genomes[i].recalculate(targetImage);
+      genomes[i].recalculate(target);
   }
 
   void mutate() {
@@ -229,8 +237,8 @@ struct Population {
     }
   }
 
-  void step(const Mat &targetImage) {
-    recalculate(targetImage);
+  void step(const Comparator &target) {
+    recalculate(target);
     prune();
     mutate();
   }
@@ -243,6 +251,7 @@ struct Run{
   Population *population;
 
   Mat targetImage;
+  Comparator *target;
 
   Run(char *filename) {
     input_filename = filename;
@@ -251,6 +260,7 @@ struct Run{
     output_filename.append(".svg");
 
     targetImage = imread(input_filename, IMREAD_COLOR);
+    target = new Comparator(targetImage);
 
     dim = {targetImage.size().width, targetImage.size().height};
 
@@ -259,7 +269,7 @@ struct Run{
 
   void run(){
     for(int iter = 0;; iter++){
-      population->step(targetImage);
+      population->step(*target);
 
       if((iter % 10) == 0) {
         cout << "Iteration " << iter << "\tParents: ";
