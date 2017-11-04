@@ -224,8 +224,11 @@ struct Population {
   }
 
   void recalculate(const Comparator &target) {
-    for(int i = 0; i < NPOP; i++)
-      genomes[i].recalculate(target);
+    parallel_for_(Range(0, NPOP), [&](const Range& range){
+      for(int i = range.start; i < range.end; i++) {
+        genomes[i].recalculate(target);
+      }
+    });
   }
 
   void mutate() {
