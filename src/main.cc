@@ -17,9 +17,7 @@ using namespace cv;
 
 #define ALLOW_ALPHA 0
 
-#define MUTATION_ADD 200
 #define MUTATION_MOVE 200
-#define MUTATION_DEL 200
 #define MUTATION_COLOUR 200
 #define MUTATION_SIZE 400
 #define MUTATION_SWAP 400
