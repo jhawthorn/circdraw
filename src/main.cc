@@ -28,6 +28,8 @@ using namespace cv;
 #define TRAND(x) if(!(rand() % (MUTATION_##x)))
 #define RANDINT(a, b) ((rand() % (b-a + 1)) + a)
 
+#define RANDF() ((float)rand()/(float)(RAND_MAX))
+
 struct Dimensions {
   int w, h;
 };
@@ -54,31 +56,32 @@ struct Comparator {
 };
 
 struct Gene{
-  int x, y, r;
+  float x, y, r;
   unsigned char c[4];
 
   Gene() {
     randomize();
   }
 
-  void draw(Mat &image){
+  void draw(Mat &image) const {
     if(r < 0) {
       return;
     }
-    Point center = {x, y};
+    Size size = image.size();
+    Point center = {(int)(x * size.width), (int)(y * size.height)};
     circle(
         image,
         center,
-        r,
+        r * size.width,
         Scalar(c[2], c[1], c[0]),
         FILLED,
         LINE_8 );
   }
 
   void randomize() {
-    x = rand() % dim.w;
-    y = rand() % dim.h;
-    r = RANDINT(10,50);
+    x = RANDF();
+    y = RANDF();
+    r = RANDF() / 10;
     c[0] = rand() % 256;
     c[1] = rand() % 256;
     c[2] = rand() % 256;
@@ -95,22 +98,22 @@ struct Gene{
       dirty = true;
       switch(rand() % 3){
         case 0:
-          x = rand() % dim.w;
-          y = rand() % dim.h;
+          x = RANDF();
+          y = RANDF();
           break;
         case 1:
-          x += RANDINT(-20, 20);
-          y += RANDINT(-20, 20);
+          x += (RANDF() - 0.5) / 10;
+          x += (RANDF() - 0.5) / 10;
           break;
         case 2:
-          x += RANDINT(-3, 3);
-          y += RANDINT(-3, 3);
+          x += (RANDF() - 0.5) / 500;
+          x += (RANDF() - 0.5) / 500;
           break;
       }
     }
     TRAND(SIZE){
       dirty = true;
-      r += RANDINT(-3, 3);
+      r += ((RANDF() - 0.5) / 10);
     }
     for(int i = 0; i < (ALLOW_ALPHA ? 4 : 3); i++){
       TRAND(COLOUR){
