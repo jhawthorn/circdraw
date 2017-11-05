@@ -198,8 +198,11 @@ struct Genome{
     return score() == other.score();
   }
 
-  void writeSVG(std::ostream &o) const {
-    o << "<svg xmlns=\"http://www.w3.org/2000/svg\">" << std::endl;
+  void writeSVG(std::ostream &o, const Size size) const {
+    o << "<svg xmlns=\"http://www.w3.org/2000/svg\" " << std::endl;
+    o << "viewBox=\"0 0 " << size.width << " " << size.height << "\" ";
+    o << "preserveAspectRatio=\"xMidYMid meet\" ";
+    o << ">" << std::endl;
     for(int i = 0; i < N_GENES; i++) {
       genes[i].writeSVG(o);
     }
@@ -277,7 +280,7 @@ struct Run{
 
         std::ofstream file;
         file.open(output_filename);
-        population->best().writeSVG(file);
+        population->best().writeSVG(file, targetImage.size());
         file.close();
       }
     }
