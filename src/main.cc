@@ -25,7 +25,7 @@ using namespace cv;
 #define MUTATION_SWAP 400
 #define MUTATION_RANDOM 400
 
-#define TRAND(x) if(!(rand() % (MUTATION_##x)))
+#define TRAND(x) if(!(rand() % (MUTATION_##x * 100)))
 #define RANDINT(a, b) ((rand() % (b-a + 1)) + a)
 
 #define RANDF() ((float)rand()/(float)(RAND_MAX))
