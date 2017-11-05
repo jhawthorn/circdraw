@@ -30,12 +30,6 @@ using namespace cv;
 
 #define RANDF() ((float)rand()/(float)(RAND_MAX))
 
-struct Dimensions {
-  int w, h;
-};
-
-Dimensions dim = {100, 100};
-
 struct Comparator {
   Mat original;
 
@@ -130,7 +124,7 @@ struct Gene{
 
   void writeSVG(std::ostream &o) const {
     o << "<circle ";
-    o << "cx=\"" << x << "\" cy=\"" << y << "\" r=\"" << r << "\" ";
+    o << "cx=\"" << x*100 << "%\" cy=\"" << y*100 << "%\" r=\"" << r*100 << "%\" ";
     o << "fill=\"#" << std::hex << (int)c[0] << (int)c[1] << (int)c[2] << (int)c[3] << std::dec << "\" ";
     o << " />" << std::endl;
   }
@@ -205,8 +199,7 @@ struct Genome{
   }
 
   void writeSVG(std::ostream &o) const {
-    o << "<svg xmlns=\"http://www.w3.org/2000/svg\" " << std::endl;
-    o << "width=\"" << dim.w << "\" height=\"" << dim.h << "\">" << std::endl;
+    o << "<svg xmlns=\"http://www.w3.org/2000/svg\">" << std::endl;
     for(int i = 0; i < N_GENES; i++) {
       genes[i].writeSVG(o);
     }
@@ -267,8 +260,6 @@ struct Run{
 
     targetImage = imread(input_filename, IMREAD_COLOR);
     target = new Comparator(targetImage);
-
-    dim = {targetImage.size().width, targetImage.size().height};
 
     population = new Population();
   }
