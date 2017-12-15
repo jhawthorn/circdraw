@@ -120,10 +120,12 @@ struct Gene{
     return dirty;
   }
 
-  void writeSVG(std::ostream &o) const {
+  void writeSVG(std::ostream &o, const Size size) const {
+    char rgb[7];
+    sprintf(rgb, "%.2X%.2X%.2X", c[0], c[1], c[2]);
     o << "<circle ";
-    o << "cx=\"" << x*100 << "%\" cy=\"" << y*100 << "%\" r=\"" << r*100 << "%\" ";
-    o << "fill=\"#" << std::hex << (int)c[0] << (int)c[1] << (int)c[2] << (int)c[3] << std::dec << "\" ";
+    o << "cx=\"" << x*size.width << "\" cy=\"" << y*size.height << "\" r=\"" << r*size.width << "\" ";
+    o << "fill=\"#" << rgb << "\" ";
     o << " />" << std::endl;
   }
 };
@@ -148,7 +150,7 @@ struct Genome{
     dirty = true;
   }
 
-  void draw(Mat &image){
+  void draw(Mat &image) const {
     for(int i = 0; i < N_GENES; i++){
       genes[i].draw(image);
     }
@@ -175,7 +177,7 @@ struct Genome{
   }
 
   void recalculate(const Comparator &target) {
-    Mat testImage = Mat::zeros(target.original.size(), CV_8UC3);
+    Mat testImage(target.original.size(), CV_8UC3, cv::Scalar(255,0,255));
     if(dirty) {
       draw(testImage);
 
@@ -198,11 +200,12 @@ struct Genome{
 
   void writeSVG(std::ostream &o, const Size size) const {
     o << "<svg xmlns=\"http://www.w3.org/2000/svg\" " << std::endl;
+    o << "width=\"100%\" height=\"100%\" ";
     o << "viewBox=\"0 0 " << size.width << " " << size.height << "\" ";
     o << "preserveAspectRatio=\"xMidYMid meet\" ";
     o << ">" << std::endl;
     for(int i = 0; i < N_GENES; i++) {
-      genes[i].writeSVG(o);
+      genes[i].writeSVG(o, size);
     }
     o << "</svg>" << std::endl;
   }
