@@ -17,13 +17,13 @@ using namespace cv;
 
 #define ALLOW_ALPHA 0
 
-#define MUTATION_MOVE 200
+#define MUTATION_MOVE 100
 #define MUTATION_COLOUR 200
 #define MUTATION_SIZE 400
 #define MUTATION_SWAP 400
-#define MUTATION_RANDOM 400
+#define MUTATION_RANDOM 800
 
-#define TRAND(x) if(!(rand() % (MUTATION_##x * 100)))
+#define TRAND(x) if(!(rand() % (MUTATION_##x * 10)))
 #define RANDINT(a, b) ((rand() % (b-a + 1)) + a)
 
 #define RANDF() ((float)rand()/(float)(RAND_MAX))
