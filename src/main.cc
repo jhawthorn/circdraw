@@ -177,7 +177,7 @@ struct Genome{
   }
 
   void recalculate(const Comparator &target) {
-    Mat testImage(target.original.size(), CV_8UC3, cv::Scalar(255,0,255));
+    Mat testImage(target.original.size(), CV_8UC3, cv::Scalar(255,255,255));
     if(dirty) {
       draw(testImage);
 
