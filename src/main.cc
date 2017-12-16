@@ -236,18 +236,24 @@ struct Run{
   std::string output_filename;
   Population *population;
 
+  Mat targetImage;
   Comparator *target;
 
-  Run(char *filename) {
-    input_filename = filename;
+  VideoCapture cap;
 
-    output_filename.append(input_filename);
-    output_filename.append(".svg");
+  Run(): target(NULL), cap(0) {
+    captureFrame();
 
-    Mat targetImage = imread(input_filename, IMREAD_COLOR);
     target = new MSEComparator(targetImage);
 
     population = new Population();
+  }
+
+  void captureFrame() {
+    cap >> targetImage;
+    resize(targetImage, targetImage, Size(240, 180));
+    if(target)
+      target->setTarget(targetImage);
   }
 
   void run(){
@@ -257,31 +263,45 @@ struct Run{
       target->justChanged = false;
 
       if((iter % 10) == 0) {
+        captureFrame();
+
         cout << "Iteration " << iter << "\tParents: ";
         for(int i = 0; i < PARENTS; i++) {
           cout << " " << population->genomes[i].score();
         }
         cout << endl;
 
-        std::ofstream file;
-        file.open(output_filename);
-        population->best().writeSVG(file, target->size());
-        file.close();
+        namedWindow("Capture", WINDOW_AUTOSIZE);
+        imshow("Capture", target->getTarget());
+
+        namedWindow("Paint", WINDOW_AUTOSIZE);
+        Mat preview(target->size(), CV_8UC3, cv::Scalar(255,255,255));
+        population->best().draw(preview);
+        imshow("Paint", preview);
+
+        Mat diff;
+        absdiff(target->getTarget(), preview, diff);
+        namedWindow("diff", WINDOW_AUTOSIZE);
+        imshow("diff", diff);
+
+        int delay = 10;
+        char c = (char)cvWaitKey(delay);
+        if (c == 27) break;
       }
     }
   }
 };
 
 void usage(int argc, char *argv[]) {
-  cout << "USAGE: " << argv[0] << " IMAGEFILE" << endl;
+  cout << "USAGE: " << argv[0] << endl;
   exit(1);
 }
 
 int main(int argc, char *argv[]){
-  if(argc != 2) {
+  if(argc != 1) {
     usage(argc, argv);
   }
-  (new Run(argv[1]))->run();
+  (new Run())->run();
   return 0;
 }
 
