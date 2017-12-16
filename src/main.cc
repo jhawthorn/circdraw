@@ -28,24 +28,7 @@ using namespace cv;
 
 #define RANDF() ((float)rand()/(float)(RAND_MAX))
 
-struct Comparator {
-  Mat original;
-
-  Comparator(Mat &o) {
-    original = o;
-  }
-
-  double diff(const Mat &other) const {
-    Mat dst;
-
-    absdiff(original, other, dst);
-    dst.convertTo(dst, CV_16UC3);
-    dst = dst.mul(dst);
-
-    Scalar s = sum(dst);
-    return s[0] + s[1] + s[2];
-  }
-};
+#include "comparators.h"
 
 struct Gene{
   float x, y, r;
@@ -177,8 +160,8 @@ struct Genome{
   }
 
   void recalculate(const Comparator &target) {
-    Mat testImage(target.original.size(), CV_8UC3, cv::Scalar(255,255,255));
-    if(dirty) {
+    Mat testImage(target.size(), CV_8UC3, cv::Scalar(255,255,255));
+    if(target.justChanged || dirty) {
       draw(testImage);
 
       _score = target.diff(testImage);
@@ -253,7 +236,6 @@ struct Run{
   std::string output_filename;
   Population *population;
 
-  Mat targetImage;
   Comparator *target;
 
   Run(char *filename) {
@@ -262,8 +244,8 @@ struct Run{
     output_filename.append(input_filename);
     output_filename.append(".svg");
 
-    targetImage = imread(input_filename, IMREAD_COLOR);
-    target = new Comparator(targetImage);
+    Mat targetImage = imread(input_filename, IMREAD_COLOR);
+    target = new MSEComparator(targetImage);
 
     population = new Population();
   }
@@ -271,6 +253,8 @@ struct Run{
   void run(){
     for(int iter = 0;; iter++){
       population->step(*target);
+
+      target->justChanged = false;
 
       if((iter % 10) == 0) {
         cout << "Iteration " << iter << "\tParents: ";
@@ -281,7 +265,7 @@ struct Run{
 
         std::ofstream file;
         file.open(output_filename);
-        population->best().writeSVG(file, targetImage.size());
+        population->best().writeSVG(file, target->size());
         file.close();
       }
     }
