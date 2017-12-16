@@ -3,7 +3,7 @@ SRCFILES := $(wildcard src/*.cc)
 OBJFILES := $(SRCFILES:%.cc=%.o)
 DEPFILES := $(OBJFILES:%.o=%.d)
 CLEANFILES := $(CLEANFILES) $(DEPFILES) $(OBJFILES) circdraw
-CXXFLAGS ?= -O3 -g $(shell pkg-config opencv --cflags) -Wall
+CXXFLAGS ?= -O3 -march=native -ffast-math -g $(shell pkg-config opencv --cflags) -Wall
 OPENCV_LIBS := $(shell pkg-config opencv --libs)
 LIBS ?= $(OPENCV_LIBS)
 PREFIX ?= /usr/local
