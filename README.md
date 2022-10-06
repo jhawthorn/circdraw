@@ -6,8 +6,8 @@ A genetic algorithm to approximate a given image using circles.
 
 Basically, the world's shittiest art plagiarist.
 
-I made this in 2009 inspired by a playful stack overflow post about doing
-extreme image compression by approximating an image as polygons. I can't find
+I made this in 2009 inspired by a [playful stack overflow post about doing
+extreme image compression by approximating an image as polygons](https://stackoverflow.com/questions/891643/twitter-image-encoding-challenge). I can't find
 the post but it was cool.
 
 I rediscovered this in 2017 and I like it. I fixed a few bugs, made it output
